@@ -1,4 +1,4 @@
-#!bin/python3
+#!/usr/bin/env python3.6
 #encoding=utf-8
 
 """ Définits toutes les classes qui effectues un schéma de chiffrement particulier """
