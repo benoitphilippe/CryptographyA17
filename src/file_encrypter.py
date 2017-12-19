@@ -96,3 +96,46 @@ class BlockFileEncrypter():
     def get_block_size_uncrypt(self):
         return self.__block_size_uncrypt
         
+class PGMEncrypter(BlockFileEncrypter):
+    """ Classe qui permet le chiffrement d'un fichier PGM
+    sans affecter son entête. Pour ce faire, on compie l'entête avant le chiffrement
+    
+    :param in_file: le nom du fichier d'entrée
+    :type in_file: string
+    :param encrypter: l'objet encrypter, doit hériter de Encrypter
+    :type encrypter: Encrypter
+    :param block_size_crypt: le nombre d'octets d'un block à lire pour l'encryption
+    :type block_size_crypt: int
+    :param out_file: le nom du fichier de sortie, sa valeur par défaut est le fichier d'entrée avec l'extension .crypted
+    :type out_file: string
+    :param block_size_uncrypt: le nombre d'octets ecrit par un block, si différent block_size_crypt
+    :type block_size_uncrypt: int"""
+
+    def crypt_to_out(self):
+        """ On suppose que notre class a bien été initialisé
+        et possède les attributs file_in et file_out
+        on copie les trois premières lignes du fichiers avant tout
+        chiffrement"""
+        # overture des fichiers
+        file_in = open(self.get_in_file(), 'rb')
+        file_out = open(self.get_out_file(), 'wb')
+
+        data = b''
+        for i in range(3):
+            data += file_in.readline()
+        file_out.write(data) # ecriture de l'entête
+
+        # chiffrement normal
+        encrypter = self.get_encrypter()
+        file = bytes(file_in.read())
+        block_size = self.get_block_size_crypt()
+        padded_file = pad(file, block_size, style='iso7816')
+        blocks = [padded_file[i*block_size:(i+1)*block_size] for i in range(len(padded_file)//block_size)]
+        for block in blocks:
+            crypted_block = encrypter.crypt(block)
+            file_out.write(crypted_block)
+        # fermeture des fichiers
+        file_in.close()
+        file_out.close()
+        
+
