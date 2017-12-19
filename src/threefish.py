@@ -7,7 +7,7 @@ from encrypter import Encrypter
 from bitarray import bitarray
 from Cryptodome.Util.strxor import strxor
 
-from mode_encrypter import CBC
+from mode_encrypter import CBC, ECB, PCBC, CTR, OFB, CFB
 from bytes_operators import *
 from file_encrypter import PGMEncrypter
 import sys
@@ -351,10 +351,45 @@ def main():
     tf = ThreeFish(keys=key, tweak=tweak)
     # blocks = b'12345678123456781234567812345678'
     cbc = CBC(tf, key)
-    file = PGMEncrypter('file/lena.pgm', cbc, 256//8, 'out/lena.pgm.crypted')
+    ecb = ECB(tf, key)
+    cfb = CFB(tf, key)
+    ctr = CTR(tf, key)
+    ofb = OFB(tf, key)
+    pcbc = PCBC(tf, key)
+
+    file = PGMEncrypter('file/lena.pgm', cbc, 256//8, 'out/lena.cbc.pgm.crypted')
     file.crypt_to_out()
     cbc.reset()
-    file = PGMEncrypter('out/lena.pgm.crypted', cbc, 256//8, 'out/lena.pgm')
+    file = PGMEncrypter('out/lena.cbc.pgm.crypted', cbc, 256//8, 'out/lena.cbc.pgm')
+    file.uncrypt_to_out()
+
+    file = PGMEncrypter('file/lena.pgm', ecb, 256//8, 'out/lena.ecb.pgm.crypted')
+    file.crypt_to_out()
+    file = PGMEncrypter('out/lena.ecb.pgm.crypted', ecb, 256//8, 'out/lena.ecb.pgm')
+    file.uncrypt_to_out()
+
+    file = PGMEncrypter('file/lena.pgm', cfb, 256//8, 'out/lena.cfb.pgm.crypted')
+    file.crypt_to_out()
+    cfb.reset()
+    file = PGMEncrypter('out/lena.cfb.pgm.crypted', cfb, 256//8, 'out/lena.cfb.pgm')
+    file.uncrypt_to_out()
+
+    file = PGMEncrypter('file/lena.pgm', ctr, 256//8, 'out/lena.ctr.pgm.crypted')
+    file.crypt_to_out()
+    ctr.reset()
+    file = PGMEncrypter('out/lena.ctr.pgm.crypted', ctr, 256//8, 'out/lena.ctr.pgm')
+    file.uncrypt_to_out()
+
+    file = PGMEncrypter('file/lena.pgm', ofb, 256//8, 'out/lena.ofb.pgm.crypted')
+    file.crypt_to_out()
+    ofb.reset()
+    file = PGMEncrypter('out/lena.ofb.pgm.crypted', ofb, 256//8, 'out/lena.ofb.pgm')
+    file.uncrypt_to_out()
+
+    file = PGMEncrypter('file/lena.pgm', pcbc, 256//8, 'out/lena.pcbc.pgm.crypted')
+    file.crypt_to_out()
+    pcbc.reset()
+    file = PGMEncrypter('out/lena.pcbc.pgm.crypted', pcbc, 256//8, 'out/lena.pcbc.pgm')
     file.uncrypt_to_out()
 
 if __name__ == '__main__':
