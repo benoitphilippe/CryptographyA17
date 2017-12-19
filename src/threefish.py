@@ -9,7 +9,7 @@ from Cryptodome.Util.strxor import strxor
 
 from mode_encrypter import CBC
 from bytes_operators import *
-#from file_input_output import PGMEncrypter
+from file_encrypter import BlockFileEncrypter
 import sys
 
 
@@ -80,7 +80,7 @@ class ThreeFish(Encrypter):
             for i in range(N): # découpage de keys en N mots
                 K.append(keys[(i*(64//8)):((i+1)*(64//8))])
             # on ajoute le dernier mot
-            C = b'1bd11bdaa9fc1a22'
+            C = b'\x1b\xd1\x1b\xda\xa9\xfc\x1a\x22'
             K.append(C)
             for i in range(N): # on apllique le xor sur tout les mots
                 K[N] = strxor(K[N], K[i])
@@ -260,7 +260,7 @@ class ThreeFish(Encrypter):
             bitarray_permuted = bitarray()
             for i in range(64):
                 # on parcour les 64 bits, à chaque position, on effectue une permutation
-                bitarray_permuted.append(bitarray[PI[i]])
+                bitarray_permuted.append(array[PI[i]])
             
             block_permuted = bitarray_permuted.tobytes()
             return block_permuted
@@ -351,9 +351,10 @@ def main():
     tf = ThreeFish(keys=key, tweak=tweak)
     # blocks = b'12345678123456781234567812345678'
     cbc = CBC(tf, key)
-    file = PGMEncrypter('lena.pgm', cbc, 256//8, 'out/lena.crypted.pgm')
+    file = BlockFileEncrypter('file/lena.pgm', cbc, 256//8, 'out/lena.pgm.crypted')
     file.crypt_to_out()
-    file = PGMEncrypter('out/lena.crypted.pgm', cbc, 256//8, 'out/lena.uncrypted.pgm')
+    cbc.reset()
+    file = BlockFileEncrypter('out/lena.pgm.crypted', cbc, 256//8, 'out/lena.pgm')
     file.uncrypt_to_out()
 
 if __name__ == '__main__':

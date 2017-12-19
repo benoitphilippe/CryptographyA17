@@ -5,7 +5,6 @@
 
 from abc import abstractmethod
 from encrypter import Encrypter
-from des import DES
 
 class EDE(Encrypter):
     """ Encrypt-Decrypt-Encrypt class
@@ -127,17 +126,3 @@ class EDE(Encrypter):
         uncrypted_block = encrypter.uncrypt(uncrypted_block)
         # return the result
         return uncrypted_block
-
-def main():
-    """ montre comment effectuer le triple DES """
-    des = DES()
-    keys = [b'12345678', b'abcdefgp', b'87654321']
-    tripleDES = EDE(des, keys)
-    block = b'12345678'
-    crypted_block = tripleDES.crypt(block)
-    print(crypted_block)
-    uncrypted_block = tripleDES.uncrypt(crypted_block)
-    print(uncrypted_block)
-
-if __name__ == '__main__':
-    main()

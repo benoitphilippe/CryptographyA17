@@ -5,10 +5,8 @@
 
 import sys
 from encrypter import Encrypter
-from A5_1 import A5_1
-from file_input_output import xorBytes, PGMEncrypter
-from des import DES
-from ede import EDE
+from random import seed, getrandbits
+from Cryptodome.Util.strxor import strxor
 from abc import abstractmethod
 
 
@@ -100,6 +98,10 @@ class ModeEncrypter(Encrypter):
     
     def get_vector(self):
         return self.__vector
+    
+    def reset(self):
+        """ Permet la réinitialisation de vector"""
+        self.set_vector(None)
 
     def init_vector(self, block_len, keys=None):
         """ Permet l'initialisation de la première valeur du vecteur en fonction
@@ -110,19 +112,15 @@ class ModeEncrypter(Encrypter):
         :param keys: la clé à utilisé pour l'initilisation,
         si cette dernière est None, on se servira de celle de encrypter
         :type keys: bytes """
-        
-        a51 = None
 
         if keys is None:
-            # On va utiliser A5_1 initilisé avec la clé pour créer notre vecteur initiale
-            a51 = A5_1(self.get_keys())
+            # On va utiliser pseudorandom initilisé avec la clé pour créer notre vecteur initiale
+            seed(self.get_keys())
         else:
-            a51 = A5_1(keys)
+            seed(keys)
 
         # Le vecteur doit être de la même taille que le block
-        vector = b''
-        for i in range(block_len):
-            vector += a51.nextByte()
+        vector = (getrandbits(8*block_len)).to_bytes(block_len, byteorder=sys.byteorder)
         # on a notre vecteur initiale, on le sauvegarde en attribut
         self.set_vector(vector)
     
@@ -144,7 +142,7 @@ class CBC(ModeEncrypter):
         if self.get_vector() is None:
             self.init_vector(len(block))
         # premièrement on xor avec le vecteur
-        crypted_block = xorBytes(self.get_vector(), block)
+        crypted_block = strxor(self.get_vector(), block)
         # Puis on chiffre le tout
         crypted_block = self.get_encrypter().crypt(crypted_block)
         # enfin on sauvegarde le résultat dans le vecteur
@@ -160,7 +158,7 @@ class CBC(ModeEncrypter):
         # Premièrement on déchiffre le block
         uncrypted_block = self.get_encrypter().uncrypt(block)
         # on xor le résultat avec notre vecteur
-        uncrypted_block = xorBytes(self.get_vector(), uncrypted_block)
+        uncrypted_block = strxor(self.get_vector(), uncrypted_block)
         # notre vecteur prend la valeur du block
         self.set_vector(block)
         # On retourne le texte claire
@@ -174,11 +172,11 @@ class PCBC(ModeEncrypter):
         if self.get_vector() is None:
             self.init_vector(len(block))
         # premièrement on xor avec le vecteur
-        crypted_block = xorBytes(self.get_vector(), block)
+        crypted_block = strxor(self.get_vector(), block)
         # Puis on chiffre le tout
         crypted_block = self.get_encrypter().crypt(crypted_block)
         # enfin on sauvegarde le résultat dans le vecteur
-        self.set_vector(xorBytes(crypted_block, block))
+        self.set_vector(strxor(crypted_block, block))
         # on retourne le résulat
         return crypted_block
     
@@ -190,9 +188,9 @@ class PCBC(ModeEncrypter):
         # Premièrement on déchiffre le block
         uncrypted_block = self.get_encrypter().uncrypt(block)
         # on xor le résultat avec notre vecteur
-        uncrypted_block = xorBytes(self.get_vector(), uncrypted_block)
+        uncrypted_block = strxor(self.get_vector(), uncrypted_block)
         # notre vecteur prend la valeur du block
-        self.set_vector(xorBytes(block, uncrypted_block))
+        self.set_vector(strxor(block, uncrypted_block))
         # On retourne le texte claire
         return uncrypted_block
 
@@ -206,7 +204,7 @@ class CFB(ModeEncrypter):
         # on chiffre le vecteur
         crypted_block = self.get_encrypter().crypt(self.get_vector())
         # on le xor avec le block
-        crypted_block = xorBytes(block, crypted_block)
+        crypted_block = strxor(block, crypted_block)
         # le prochain vecteur est le chiffré
         self.set_vector(crypted_block)
         # on retourne le chifré
@@ -220,7 +218,7 @@ class CFB(ModeEncrypter):
         # on chiffre le vecteur    
         uncrypted_block = self.get_encrypter().crypt(self.get_vector())
         # on xor avec le block
-        uncrypted_block = xorBytes(uncrypted_block, block)
+        uncrypted_block = strxor(uncrypted_block, block)
         # le prochain vecteur est ce block
         self.set_vector(block)
         # On retourne le texte claire
@@ -238,7 +236,7 @@ class OFB(ModeEncrypter):
         # le prochain vecteur est l'étape intermédiaire
         self.set_vector(crypted_block)
         # on le xor avec le block
-        crypted_block = xorBytes(block, crypted_block)
+        crypted_block = strxor(block, crypted_block)
         # on retourne le chifré
         return crypted_block
     
@@ -252,7 +250,7 @@ class OFB(ModeEncrypter):
         # le prochain vecteur est l'étape intermédiaire
         self.set_vector(uncrypted_block)
         # on xor avec le block
-        uncrypted_block = xorBytes(uncrypted_block, block)
+        uncrypted_block = strxor(uncrypted_block, block)
         # On retourne le texte claire
         return uncrypted_block
 
@@ -274,7 +272,7 @@ class CTR(ModeEncrypter):
         # on chiffre le vecteur
         crypted_block = self.get_encrypter().crypt(self.get_vector())
         # on xor le tout pour obtenir le chiffré
-        crypted_block = xorBytes(crypted_block, block)
+        crypted_block = strxor(crypted_block, block)
         # on incrémente le vecteur
         self.incremente_vector()
         # on retourne le résultat
@@ -285,19 +283,3 @@ class CTR(ModeEncrypter):
         # same as encryption
         return self.crypt(block)
         
-
-
-def main():
-
-    keys = b'1234567887654321abcdefgh'
-    tripleDES = EDE(DES(), keys)
-    cbc = CBC(tripleDES)
-    file = PGMEncrypter('lena.pgm', cbc, 64//8, 'out/lena.cbc3des.pgm')
-    file.crypt_to_out()
-    cbc.init_vector(64//8)
-    file = PGMEncrypter('out/lena.cbc3des.pgm', cbc, 64//8, 'out/lena.cbc3des.uncrypted.pgm')
-    file.uncrypt_to_out()
-
-
-if __name__ == '__main__':
-    main()

@@ -19,7 +19,7 @@ def getStongGenerator(p):
     """ Génère un generateur de Z/Zp
     On compte sur le fait que p soit un nombre premier issue
     de getStrongPrime juste audessus
-    comme ça on connait le décomposition de p-1
+    comme ça on connait la décomposition de p-1
     """
     q = (p-1)//2
     if not miller_rabin(q):
@@ -65,7 +65,7 @@ def miller_rabin(n, k=30):
 
 
 def test():
-    N = 2014
+    N = 512 # au-dessus ça devient trop long
     p = getStrongPrime(N)
     print(p)
     for i in range(5):
