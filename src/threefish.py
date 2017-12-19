@@ -9,7 +9,7 @@ from Cryptodome.Util.strxor import strxor
 
 from mode_encrypter import CBC
 from bytes_operators import *
-from file_encrypter import BlockFileEncrypter
+from file_encrypter import PGMEncrypter
 import sys
 
 
@@ -351,10 +351,10 @@ def main():
     tf = ThreeFish(keys=key, tweak=tweak)
     # blocks = b'12345678123456781234567812345678'
     cbc = CBC(tf, key)
-    file = BlockFileEncrypter('file/lena.pgm', cbc, 256//8, 'out/lena.pgm.crypted')
+    file = PGMEncrypter('file/lena.pgm', cbc, 256//8, 'out/lena.pgm.crypted')
     file.crypt_to_out()
     cbc.reset()
-    file = BlockFileEncrypter('out/lena.pgm.crypted', cbc, 256//8, 'out/lena.pgm')
+    file = PGMEncrypter('out/lena.pgm.crypted', cbc, 256//8, 'out/lena.pgm')
     file.uncrypt_to_out()
 
 if __name__ == '__main__':
