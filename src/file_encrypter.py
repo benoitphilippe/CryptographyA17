@@ -98,7 +98,7 @@ class BlockFileEncrypter():
         
 class PGMEncrypter(BlockFileEncrypter):
     """ Classe qui permet le chiffrement d'un fichier PGM
-    sans affecter son entête. Pour ce faire, on compie l'entête avant le chiffrement
+    sans affecter son entête. Pour ce faire, on copie l'entête avant le chiffrement
     
     :param in_file: le nom du fichier d'entrée
     :type in_file: string
@@ -135,6 +135,31 @@ class PGMEncrypter(BlockFileEncrypter):
             crypted_block = encrypter.crypt(block)
             file_out.write(crypted_block)
         # fermeture des fichiers
+        file_in.close()
+        file_out.close()
+    
+    def uncrypt_to_out(self):
+        """ Même chose que pour le chiffrement"""
+        # overture des fichiers
+        file_in = open(self.get_in_file(), 'rb')
+        file_out = open(self.get_out_file(), 'wb')
+
+        data = b''
+        for i in range(3):
+            data += file_in.readline()
+        file_out.write(data) # ecriture de l'entête
+
+        # dechiffrement
+        encrypter = self.get_encrypter()
+        file = bytes(file_in.read())
+        block_size = self.get_block_size_uncrypt()
+        blocks = [file[i*block_size:(i+1)*block_size] for i in range(len(file)//block_size)]
+        for i in range(len(file)//block_size):
+            blocks[i] = encrypter.uncrypt(blocks[i])
+        # fermeture des fichiers
+        out = concat_bytes(blocks)
+        out = unpad(out, self.get_block_size_crypt(), style='iso7816')
+        file_out.write(out)
         file_in.close()
         file_out.close()
         
