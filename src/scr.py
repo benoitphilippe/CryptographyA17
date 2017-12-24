@@ -114,9 +114,9 @@ def show_crypt_threeFish_instructions(stdscr, message=None, cursor=0):
     else:
         stdscr.addstr("->q<- Quitter\n")
     if cursor == 3:
-        stdscr.addstr("->i<- Saisir le nom du fichier à chiffrer\n", curses.color_pair(1))
+        stdscr.addstr("->i<- Saisir le nom du fichier à chiffrer/déchiffrer\n", curses.color_pair(1))
     else:
-        stdscr.addstr("->i<- Saisir le nom du fichier à chiffrer\n")
+        stdscr.addstr("->i<- Saisir le nom du fichier à chiffrer/déchiffrer\n")
         
     if message is not None:
         stdscr.addstr(message)
@@ -165,8 +165,42 @@ def mode_crypt_cramershoup(stdscr):
     pass
 def mode_hash(stdscr):
     pass
-def mode_uncrypt_threefish(stdscr):
-    pass
+def mode_uncrypt_threefish(stdscr, message=None):
+    loop = True
+    cursor = 0
+    while loop:
+        show_crypt_threeFish_instructions(stdscr, message, cursor)
+        key = stdscr.getkey()
+        loop = False
+        if key == 'm' or (key == '\n' and cursor == 1):
+            menu(stdscr)
+        elif key == 'q' or (key == '\n' and cursor == 2):
+            pass
+        elif key == 'KEY_UP' and cursor > 1:
+            cursor -= 1
+            loop = True
+        elif key == 'KEY_DOWN' and cursor < 3:
+            cursor += 1
+            loop = True
+        elif key == 'i' or (key == '\n' and cursor == 3):
+            file_name = input_user(stdscr, "Veuillez saisir le nom du fichier à déchiffrer. Ctrl + G pour confirmer")
+            exist = True
+            try:
+                file = open(file_name)
+                file.close()
+            except IOError:
+                exist = False
+            if not exist:
+                mode_uncrypt_threefish(stdscr, "\nErreur lors de l'ouverture du fichier : {}\nEssayez de nouveau\n".format(file_name))
+            else:
+                base_keys = input_user(stdscr, "Le fichier {} a été trouvé avec succès.\nVeuillez saisir votre clé de chiffrement. Ctrl + G pour confirmer".format(file_name))
+                base_tweak = input_user(stdscr, "Maintenant, veuillez saisir votre tweak. Ctrl + G pour confirmer")
+                keys = choose_keys_size(stdscr, base_keys)
+                tweak = md5(base_tweak.encode()).digest()
+
+                dechiffrement_threefish(stdscr, file_name, keys, tweak)
+        else:
+            loop = True
 def mode_uncrypt_cramershoup(stdscr):
     pass
 def mode_hash_check(stdscr):
@@ -192,6 +226,25 @@ def chiffrement_threefish(stdscr, file_name, keys, tweak):
     napms(1000)
     menu(stdscr)
 
+def dechiffrement_threefish(stdscr, file_name, keys, tweak):
+    mode_encrypter = choix_mode_de_chiffrement(stdscr, ThreeFish(tweak), keys)
+    # on a tout ce qu'il faut pour chiffrer
+    pgm = False
+    if re.match('.+\.pgm.*', file_name) is not None:
+        pgm = choix_mode_PGM(stdscr)
+    stdscr.clear()
+    stdscr.addstr("En cours de déchiffrement ...\n")
+    stdscr.refresh()
+    file = None
+    if pgm:
+        file = PGMEncrypter(file_name, mode_encrypter, len(keys))
+    else:
+        file = BlockFileEncrypter(file_name, mode_encrypter, len(keys))
+    file.uncrypt_to_out()
+    stdscr.addstr("Votre fichier {} a été déchiffré :) !".format(file_name))
+    stdscr.refresh()
+    napms(1000)
+    menu(stdscr)
 
 def choix_mode_PGM(stdscr):
     """ laisse le choix à l'utilisateur de chiffrer en gardant la vue pgm"""
