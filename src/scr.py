@@ -8,6 +8,8 @@ from mode_encrypter import *
 from file_encrypter import *
 import curses
 from hashlib import sha256, sha512, md5
+from cramershoup import CramerShoup
+from file_encrypter import PGMEncrypter, BlockFileEncrypter
 import sys
 import re
 
@@ -123,7 +125,7 @@ def show_crypt_threeFish_instructions(stdscr, message=None, cursor=0):
     stdscr.refresh()
         
 def mode_crypt_threefish(stdscr, message=None):
-
+    
     loop = True
     cursor = 0
     while loop:
@@ -161,10 +163,99 @@ def mode_crypt_threefish(stdscr, message=None):
             loop = True
             
 
-def mode_crypt_cramershoup(stdscr):
-    pass
+def mode_crypt_cramershoup(stdscr, message=None):
+    """ Effectue le chiffrement d'un fichier avec Cramer-Shoup"""
+    loop = True
+    cursor = 0
+    while loop:
+        show_key_choices(stdscr, cursor, message)
+        key = stdscr.getkey()
+        loop = False
+        cs = CramerShoup()
+        if key == '1' or (key == '\n' and cursor == 1):
+            key_size = choose_keys_size(stdscr)# choose the size of key [256,512,1024]
+            stdscr.clear()
+            stdscr.addstr("Création des clés de chiffrement ...\n\n")
+            stdscr.refresh()
+            cs.generate_keys(key_size)
+            stdscr.addstr("Vos clés ont été générés dans keys/\n")
+            stdscr.refresh()
+            napms(2000)
+            mode_crypt_cramershoup(stdscr, "Les clés ont été générés\n")
+            
+        elif key == '2' or (key == '\n' and cursor == 2):
+            # chiffre avec la clé privé (la clé privé contient la clé publique)
+            key_file_name = input_user(stdscr, "Veuiller entrer l'enplacement de la clé public. Ctrl + G pour confirmer")
+            try:
+               cs.read_key(key_file_name)
+            except IOError:
+                # cannot open the file
+                mode_crypt_cramershoup(stdscr, "Impossible de lire la clé dans le fichier {}".format(key_file_name))
+                return
+            file_name = input_user(stdscr, "Clé chargé avec succès.\n Veuillez entrer la nom du fichier à chiffrer")
+            try:
+                file = open(file_name)
+                file.close()
+            except IOError:
+                mode_crypt_cramershoup(stdscr, "Impossible d'ouvrir le fichier {}".format(file_name))
+                return
+            # si le fichier est un pgm, on laisse le choix à l'utilisateur
+            pgm = False
+            if re.match('.+\.pgm.*', file_name) is not None:
+                pgm = choix_mode_PGM(stdscr)
+            
+            # on chiffre le fichier
+            stdscr.clear()
+            stdscr.addstr("En cours de chiffrement ...\n")
+            stdscr.refresh()
+            wrap = None
+            if pgm:
+                wrap = PGMEncrypter(file_name, cs, cs.bit_size//(2*8), file_name + ".crypted", 4*cs.bit_size//8)
+            else:
+                wrap = BlockFileEncrypter(file_name, cs, cs.bit_size//(2*8), file_name + ".crypted", 4*cs.bit_size//8)
+            wrap.crypt_to_out()
+            stdscr.addstr("Votre fichier {} a été chiffré :) !".format(file_name))
+            stdscr.refresh()
+            napms(1000)
+            menu(stdscr)
+        elif key == 'm' or (key == '\n' and cursor == 3):
+            menu(stdscr)
+        elif key == 'KEY_UP' and cursor > 1:
+            cursor -= 1
+            loop = True
+        elif key == 'KEY_DOWN' and cursor < 3:
+            cursor += 1
+            loop = True
+        else:
+            loop = True
+
 def mode_hash(stdscr):
     pass
+def show_key_choices(stdscr, cursor=0, message=None):
+    """ Affiche le menu de selection des clés pour Cramer-Shoup"""
+    stdscr.clear()
+    curses.curs_set(False)
+    stdscr.addstr("*** Choix de la clé pour Cramer-Shoup ***\n\n")
+
+    string = "->1<- Génération de nouvelles clés\n"
+    if cursor == 1:
+        stdscr.addstr(string, curses.color_pair(1))
+    else:
+        stdscr.addstr(string)
+    string = "->2<- Entrer le chemin de la clé\n"
+    if cursor == 2:
+        stdscr.addstr(string, curses.color_pair(1))
+    else:
+        stdscr.addstr(string)
+    string = "->m<- Retour au menu principal\n"
+    if cursor == 3:
+        stdscr.addstr(string, curses.color_pair(1))
+    else:
+        stdscr.addstr(string) 
+    if message is not None:
+        stdscr.addstr(message)
+    stdscr.refresh()
+
 def mode_uncrypt_threefish(stdscr, message=None):
     loop = True
     cursor = 0
@@ -201,8 +292,79 @@ def mode_uncrypt_threefish(stdscr, message=None):
                 dechiffrement_threefish(stdscr, file_name, keys, tweak)
         else:
             loop = True
-def mode_uncrypt_cramershoup(stdscr):
-    pass
+def mode_uncrypt_cramershoup(stdscr, message=None):
+    """ Guide pour le déchiffrement de Cramer-Shoup """
+    loop = True
+    cursor = 0
+    while loop:
+        show_key_choices(stdscr, cursor, message)
+        key = stdscr.getkey()
+        loop = False
+        cs = CramerShoup()
+        if key == '1' or (key == '\n' and cursor == 1):
+            key_size = choose_keys_size(stdscr)# choose the size of key [256,512,1024]
+            stdscr.clear()
+            stdscr.addstr("Création des clés de chiffrement ...\n\n")
+            stdscr.refresh()
+            cs.generate_keys(key_size)
+            stdscr.addstr("Vos clés ont été générés dans keys/\n")
+            stdscr.refresh()
+            napms(2000)
+            mode_uncrypt_cramershoup(stdscr, "Les clés ont été générés\n")
+            
+        elif key == '2' or (key == '\n' and cursor == 2):
+            # chiffre avec la clé privé (la clé privé contient la clé publique)
+            key_file_name = input_user(stdscr, "Veuiller entrer l'enplacement de la clé privé. Ctrl + G pour confirmer")
+            try:
+               cs.read_key(key_file_name)
+            except IOError:
+                # cannot open the file
+                mode_uncrypt_cramershoup(stdscr, "Impossible de lire la clé dans le fichier {}".format(key_file_name))
+                return
+            file_name = input_user(stdscr, "Clé chargé avec succès.\n Veuillez entrer la nom du fichier à déchiffrer")
+            try:
+                file = open(file_name)
+                file.close()
+            except IOError:
+                mode_uncrypt_cramershoup(stdscr, "Impossible d'ouvrir le fichier {}".format(file_name))
+                return
+            # si le fichier est un pgm, on laisse le choix à l'utilisateur
+            pgm = False
+            if re.match('.+\.pgm.*', file_name) is not None:
+                pgm = choix_mode_PGM(stdscr)
+            
+            # on chiffre le fichier
+            stdscr.clear()
+            stdscr.addstr("En cours de déchiffrement ...\n")
+            stdscr.refresh()
+            wrap = None
+            if pgm:
+                wrap = PGMEncrypter(file_name, cs, cs.bit_size//(2*8), file_name + ".uncrypted", 4*cs.bit_size//8)
+            else:
+                wrap = BlockFileEncrypter(file_name, cs, cs.bit_size//(2*8), file_name + ".uncrypted", 4*cs.bit_size//8)
+            try:
+                wrap.uncrypt_to_out()
+            except Exception:
+                stdscr.addstr("Une erreur est survenue lors du déchiffrement")
+                stdscr.refresh()
+                napms(2000)
+                mode_uncrypt_cramershoup(stdscr, "Une erreur est survenue lors du déchiffrement")
+                sys.exit()
+            
+            stdscr.addstr("Votre fichier {} a été déchiffré :) !".format(file_name))
+            stdscr.refresh()
+            napms(1000)
+            menu(stdscr)
+        elif key == 'm' or (key == '\n' and cursor == 3):
+            menu(stdscr)
+        elif key == 'KEY_UP' and cursor > 1:
+            cursor -= 1
+            loop = True
+        elif key == 'KEY_DOWN' and cursor < 3:
+            cursor += 1
+            loop = True
+        else:
+            loop = True
 def mode_hash_check(stdscr):
     pass
 
@@ -354,7 +516,7 @@ def show_keys_size_menu(stdscr, cursor):
         stdscr.addstr("->q<- Pour quitter\n")
     stdscr.refresh()
 
-def choose_keys_size(stdscr, base_keys):
+def choose_keys_size(stdscr, base_keys=None):
     """ Retourne la clé hashé à la bonne taille"""
 
     loop = True
@@ -364,11 +526,20 @@ def choose_keys_size(stdscr, base_keys):
         key = stdscr.getkey()
         loop = False    
         if key == '1' or (key == '\n' and cursor == 1):
-            return sha256(base_keys.encode()).digest()
+            if base_keys is not None:
+                return sha256(base_keys.encode()).digest()
+            else:
+                return 256
         elif key == '2' or (key == '\n' and cursor == 2):
-            return sha512(base_keys.encode()).digest()
+            if base_keys is not None:
+                return sha512(base_keys.encode()).digest()
+            else:
+                return 512
         elif key == '3' or (key == '\n' and cursor == 3):
-            return sha512(base_keys.encode()).digest() + sha512(base_keys.encode()).digest()
+            if base_keys is not None:
+                return sha512(base_keys.encode()).digest() + sha512(base_keys.encode()).digest()
+            else:
+                return 1024
         elif key == 'q' or (key == '\n' and cursor == 4):
             sys.exit()
         elif key == 'KEY_UP' and cursor > 1:
