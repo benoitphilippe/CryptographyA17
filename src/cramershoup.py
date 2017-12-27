@@ -11,6 +11,7 @@ from Cryptodome.Util.number import inverse
 from Cryptodome.Util.Padding import pad, unpad
 from mode_encrypter import ECB
 from file_encrypter import PGMEncrypter
+from hasher import Hasher
 import sys
 
 class CramerShoup(Encrypter):
@@ -181,7 +182,7 @@ class CramerShoup(Encrypter):
         """ Fonction de hashage d'un entier, renvoie un au autre entier issue du hashage"""
         # Pour Yacine : A implémenter comme il faut. (Il faut en reprogrammer une)
         hexe = number.to_bytes(self.bit_size//8, sys.byteorder)
-        return int.from_bytes(sha256(hexe).digest(), sys.byteorder)
+        return int.from_bytes(Hasher().digest(hexe), sys.byteorder)
 
 
 
