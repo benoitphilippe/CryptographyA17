@@ -7,4 +7,4 @@ sudo apt-get install python3.6 python3.6-dev libssl-dev
 sudo python3.6 install-pip.py
 
 # install all dependencies with pip
-sudo pip install -r requirements.txt
+sudo pip3.6 install -r requirements.txt
