@@ -38,22 +38,15 @@ Pour lancer le programme sous linux une fois les dépendances installées :
 ./launch.sh
 ```
 
-Si il vous est impossible de lancer le script pour une quelconque raison. Sachez que le programme peut se lancer directement avec l'interpreteur python :
+S' il vous est impossible de lancer le script pour une quelconque raison, Sachez que le programme peut se lancer directement avec l'interpreteur python :
 ```
 python3.6 src/scr.py
 ```
 
 ### Problèmes connus
-Si l'instalation depuis pip échoue, il est possible de télécherger les version antérieurs à celle données dans requirements.txt. Pour cela, il suffit de retirer leur numéro de version.
-
+Si l'instalation depuis pip échoue parce qu'il n'arrive pas à trouver une version précise d'une des dépendances, il est possible de télécherger les version antérieurs à celle données dans requirements.txt. Pour cela, il suffit de lancer :
+ensuite lors de l'appel à :
+ ```
+sudo pip3.6 install -r debug/requirements_debug.txt
 ```
-distro-info===0.14build1
-pygobject==3.22.0
-python-apt==1.4.0b2
-```
-devient 
-```
-distro-info
-pygobject
-python-apt
-```
+votre système téléchargera la version de la dépendance qu'il pourra trouver
