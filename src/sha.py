@@ -277,8 +277,6 @@ def sha1(file):
 
 	digest = '%08x%08x%08x%08x%08x' % digest_values
 
-	print(digest)
-
 	return(digest)
 
 
