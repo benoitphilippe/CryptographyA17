@@ -20,4 +20,7 @@ cd CryptographyA17
 ```
 
 ### Windows
-Dans le cas d'un environnement windows (et même linux d'ailleur), vous pouvez utiliser launch.exe.
+Dans le cas d'un environnement windows, vous pouvez utiliser les exécutables:
+ - launch32.exe
+ - launch64.exe
+
