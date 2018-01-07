@@ -13,6 +13,7 @@ from mode_encrypter import ECB
 from file_encrypter import PGMEncrypter
 from hasher import Hasher
 import sys
+import sha
 
 class CramerShoup(Encrypter):
     
@@ -179,10 +180,11 @@ class CramerShoup(Encrypter):
         return self.p.to_bytes(self.bit_size // 8, sys.byteorder)
     
     def hashFunction(self, number):
-        """ Fonction de hashage d'un entier, renvoie un au autre entier issue du hashage"""
-        # Pour Yacine : A implémenter comme il faut. (Il faut en reprogrammer une)
+        """ Fonction de hashage d'un entier, renvoie un autre entier issue du hashage"""
+        
         hexe = number.to_bytes(self.bit_size//8, sys.byteorder)
-        return int.from_bytes(Hasher().digest(hexe), sys.byteorder)
+        #return int.from_bytes(Hasher().digest(hexe), sys.byteorder)
+        return int.from_bytes(str.encode(sha.sha1(str(hexe))), sys.byteorder)
 
 
 

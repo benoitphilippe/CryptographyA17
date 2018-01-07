@@ -13,6 +13,7 @@ from file_encrypter import PGMEncrypter, BlockFileEncrypter
 from hasher import Hasher
 import sys
 import re
+import sha
 
 def main(stdscr):
     # selected color
@@ -233,14 +234,15 @@ def mode_crypt_cramershoup(stdscr, message=None):
             loop = True
 
 def mode_hash(stdscr):
-    file_name = input_user(stdscr, "Veuiller indiquer le fichier à fournir pur la signature. Ctrl + G pour confirmer")
+    file_name = input_user(stdscr, "Veuiller indiquer le fichier ou message à fournir pour la signature. Ctrl + G pour confirmer")
     try:
-        file = open(file_name, 'rb')
-        block = bytes(file.read())
-        hashed = Hasher().digest(block)
+        #file = open(file_name, 'rb')
+        #block = bytes(file.read())
+        #hashed = Hasher().digest(block)
+        hashed = sha.sha1(file_name).encode()
         out = open(file_name + '.hash', 'wb')
         out.write(hashed)
-        file.close()
+        #file.close()
         out.close()
         stdscr.clear()
         stdscr.addstr("Le hash à été sauvegardé dans {}.hash".format(file_name), curses.color_pair(3))
@@ -393,17 +395,18 @@ def mode_hash_check(stdscr):
     file_name = input_user(stdscr, "Veuillez saisir le nom du fichier dont le hash doit être vérifié")
     hashed = None
     try:
-        file = open(file_name, 'rb')
-        block = bytes(file.read())
-        hashed = Hasher().digest(block)
+        #file = open(file_name, 'rb')
+        #block = bytes(file.read())
+        #hashed = Hasher().digest(block)
+        hashed = sha.sha1(file_name).encode()
     except IOError:
         stdscr.clear()
         stdscr.addstr("Problème lors de l'ouverture du fichier ... :( !", curses.color_pair(2))
         stdscr.refresh()
         napms(2000)
         menu(stdscr)
-    finally:
-        file.close()
+    #finally:
+        #file.close()
     # on a le hash, ouverture du fichier contenant le hash
     hash_file_name = input_user(stdscr, "Hash du fichier en mémoire.\n Veuillez entrer le fichier contenant le hash à comparer. Ctrl + G pour confirmer")
     block = None
