@@ -45,7 +45,6 @@ python3.6 src/scr.py
 
 ### Problèmes connus
 Si l'instalation depuis pip échoue parce qu'il n'arrive pas à trouver une version précise d'une des dépendances, il est possible de télécherger les version antérieurs à celle données dans requirements.txt. Pour cela, il suffit de lancer :
-ensuite lors de l'appel à :
  ```
 sudo pip3.6 install -r debug/requirements_debug.txt
 ```
