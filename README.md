@@ -24,16 +24,36 @@ pour l'instalation de pip, vous pouvez vous servir du script install-pip.py
 sudo python3.6 install-pip.py
 ```
 
-Une fois python3.6 et pip3.6 installé, vous pouvez utiliser la commande :
+Une fois python3.6 et pip3.6 installés, vous pouvez utiliser la commande :
 
 ```
 sudo pip3.6 install -r requirements.txt
 ```
-pour installer toutes les dépendences en une fois
+pour installer toutes les dépendances en une fois
 
 ### Exécution
 
-Pour lancer le programme sous linux une fois les dépendances installé :
+Pour lancer le programme sous linux une fois les dépendances installées :
 ```
 ./launch.sh
+```
+
+Si il vous est impossible de lancer le script pour une quelconque raison. Sachez que le programme peut se lancer directement avec l'interpreteur python :
+```
+python3.6 src/scr.py
+```
+
+### Problèmes connus
+Si l'instalation depuis pip échoue, il est possible de télécherger les version antérieurs à celle données dans requirements.txt. Pour cela, il suffit de retirer leur numéro de version.
+
+```
+distro-info===0.14build1
+pygobject==3.22.0
+python-apt==1.4.0b2
+```
+devient 
+```
+distro-info
+pygobject
+python-apt
 ```
